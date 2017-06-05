@@ -8,6 +8,7 @@ import Subscription from './subscription';
 import StreamingOrphanFinder from './orphan-finder';
 import log from '../../log';
 import { padLeft } from '../../utils/string';
+import streamingProto from './streamingProto';
 
 // -- Local variables section --
 
@@ -479,7 +480,8 @@ Streaming.prototype.createSubscription = function(serviceGroup, url, subscriptio
  * @param {saxo.openapi.StreamingSubscription} subscription - The subscription to start.
  */
 Streaming.prototype.subscribe = function(subscription) {
-
+    console.log('[debug] Sub');
+    streamingProto();
     subscription.onSubscribe();
 };
 
@@ -535,7 +537,7 @@ Streaming.prototype.disconnect = function() {
  * Shuts down streaming.
  */
 Streaming.prototype.dispose = function() {
-
+    console.log('[debug] Dispose');
     this.disposed = true;
 
     this.orphanFinder.stop();
@@ -552,6 +554,11 @@ Streaming.prototype.dispose = function() {
     this.transport.delete('root', 'v1/subscriptions/{contextId}', { contextId: this.contextId });
 
     this.disconnect();
+};
+
+Streaming.prototype.runProto = function() {
+    console.log('[debug] Try to run proto');
+    streamingProto();
 };
 
 // -- Export section --

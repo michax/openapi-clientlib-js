@@ -10,7 +10,8 @@ module.exports = function (grunt) {
 		eslint: require("./grunt/eslint-conf"),
 		rollup: require("./grunt/rollup-conf"),
 		watch: require("./grunt/watch-conf"),
-		remapIstanbul: require("./grunt/remap-istanbul-conf")
+		remapIstanbul: require("./grunt/remap-istanbul-conf"),
+        shell: require("./grunt/proto-conf"),
 	});
 
 	/* Load tasks for the npm packages we depend upon */
@@ -22,6 +23,7 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks("grunt-contrib-watch");
 	grunt.loadNpmTasks("grunt-rollup");
 	grunt.loadNpmTasks('remap-istanbul');
+    grunt.loadNpmTasks('grunt-shell');
 
 	/* Register our own base tasks */
 

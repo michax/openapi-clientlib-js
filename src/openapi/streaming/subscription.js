@@ -525,7 +525,7 @@ Subscription.prototype.onConnectionAvailable = function() {
  * @returns {boolean} false if the update is not for this subscription
  */
 Subscription.prototype.onStreamingData = function(message) {
-
+    console.error('[debug][onStreamingData] message: ', message);
     onActivity.call(this);
 
     switch (this.currentState) {
