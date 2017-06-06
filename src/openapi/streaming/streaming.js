@@ -8,6 +8,7 @@ import Subscription from './subscription';
 import StreamingOrphanFinder from './orphan-finder';
 import log from '../../log';
 import { padLeft } from '../../utils/string';
+import StreamingProto from './streamingProto';
 
 // -- Local variables section --
 
@@ -479,7 +480,8 @@ Streaming.prototype.createSubscription = function(serviceGroup, url, subscriptio
  * @param {saxo.openapi.StreamingSubscription} subscription - The subscription to start.
  */
 Streaming.prototype.subscribe = function(subscription) {
-
+    console.log('[streaming][subscribe] Try proto');
+    StreamingProto();
     subscription.onSubscribe();
 };
 
