@@ -41,7 +41,10 @@
     "remap-istanbul": "0.9.1",
     "requirejs": "2.3.3",
     "rollup-plugin-babel": "2.7.1",
+    "rollup-plugin-commonjs": "8.0.2",
+    "rollup-plugin-node-resolve": "3.0.0",
     "taffydb": "2.7.3",
-    "whatwg-fetch": "2.0.3"
+    "whatwg-fetch": "2.0.3",
+    "protobufjs": "6.7.3"
   }
 }
