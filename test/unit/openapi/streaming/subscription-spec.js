@@ -840,8 +840,6 @@ describe('openapi StreamingSubscription', () => {
     });
 
     describe('json serialization', () => {
-        // TODO(xmiku): Scenarios to test
-        // 1. Updating Existing Schema for endpoint, using Schema versioning. Mock reconnect behaviour.
 
         it('should parse data without schema', (done) => {
             const args = {
