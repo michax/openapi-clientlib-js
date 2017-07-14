@@ -869,6 +869,31 @@ describe('openapi StreamingSubscription', () => {
             });
         });
 
+        it('should default to json if format is not provided', (done) => {
+            const args = {
+                Arguments: {
+                    ClientKey: '1234',
+                },
+            };
+            const subscription = new Subscription('123', transport, 'serviceGroup', 'test/resource', args, createdSpy, updateSpy);
+            subscription.onSubscribe();
+
+            sendInitialResponse({
+                InactivityTimeout: 100,
+                Snapshot: mockProtoPrice.objectMessage,
+            });
+
+            tick(() => {
+                expect(transport.post.calls.count()).toEqual(1);
+                expect(
+                    updateSpy.calls.first().args[0]
+                ).toEqual(
+                    jasmine.objectContaining(mockProtoPrice.objectMessage)
+                );
+                done();
+            });
+        });
+
         it('should parse streaming update', (done) => {
             const args = {
                 Format: 'application/json',

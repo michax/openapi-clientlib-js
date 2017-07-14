@@ -1,4 +1,4 @@
-﻿﻿/*
+﻿/*
   This task "rolls up" files that have imported each other into a single bundle.
   The 'dist' subtask takes the multiple transpiled source files and creates the bundle.
   The 'test' subtask merges together spec files with any dependencies so that the tests

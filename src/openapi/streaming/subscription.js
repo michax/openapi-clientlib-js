@@ -373,7 +373,7 @@ function Subscription(streamingContextId, transport, serviceGroup, url, subscrip
     this.subscriptionFormat = subscriptionArgs.Format || SerializerFacade.defaultSerializerName;
 
     /**
-     * The serializer, chosen based on seleted format.
+     * The serializer, chosen based on provided format.
      */
     this.serializer = SerializerFacade.getSerializer(subscriptionArgs.Format);
 
