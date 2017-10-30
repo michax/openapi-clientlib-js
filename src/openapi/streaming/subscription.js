@@ -191,6 +191,10 @@ function onSubscribeSuccess(referenceId, result) {
 
     const responseData = result.response;
 
+    if (DEBUG_URLS.indexOf(this.url) !== -1) {
+        console.log('[debug][onSubscribeSuccess] result: ', result);
+    }
+
     if (referenceId !== this.referenceId) {
         log.warn(LOG_AREA, 'Received an Ok subscribe response for subscribing a subscription that has afterwards been reset - ignoring');
         // we could send the contextId as well an attempt a unsubscribe, but its hard to guess what could lead to this.
@@ -366,16 +370,23 @@ function Subscription(streamingContextId, transport, serviceGroup, url, subscrip
      */
     this.queue = new SubscriptionQueue();
 
+    if (serviceGroup === 'port') {
+        console.log('[debug][subscription] url: ', url,
+            '\nsubscriptionArgs: ', subscriptionArgs,
+            '\nserviceGroup: ', serviceGroup,
+        );
+    }
+
     /**
      * The subscription format. Used to derive serialization method for incoming subscription messages.
      * @type {String}
      */
-    this.subscriptionFormat = subscriptionArgs.Format || SerializerFacade.defaultSerializerName;
+    this.subscriptionFormat = subscriptionArgs.Format;
 
     /**
      * The serializer, chosen based on provided format.
      */
-    this.serializer = SerializerFacade.getSerializer(subscriptionArgs.Format);
+    this.serializer = SerializerFacade.getSerializer(this.subscriptionFormat);
 
     this.transport = transport;
     this.serviceGroup = serviceGroup;
@@ -383,7 +394,15 @@ function Subscription(streamingContextId, transport, serviceGroup, url, subscrip
     this.onUpdate = onUpdate;
     this.onError = onError;
     this.onSubscriptionCreated = onSubscriptionCreated;
-    this.subscriptionData = extend({}, subscriptionArgs);
+    this.subscriptionData = extend({ Format: this.subscriptionFormat }, subscriptionArgs);
+
+    if (DEBUG_URLS.indexOf(this.url) !== -1) {
+        console.log('[debug][subscription] url: ', url,
+            '\nsubscriptionArgs: ', subscriptionArgs,
+            '\nserviceGroup: ', serviceGroup,
+            '\nsubscriptionData: ', this.subscriptionData
+        );
+    }
 
     if (!this.subscriptionData.RefreshRate) {
         this.subscriptionData.RefreshRate = DEFAULT_REFRESH_RATE_MS;
@@ -406,16 +425,41 @@ Subscription.prototype.UPDATE_TYPE_DELTA = 2;
  */
 Subscription.prototype.OPENAPI_DELETE_PROPERTY = '__meta_deleted';
 
+const DEBUG_URLS = [
+    'v1/balances/subscriptions',
+    'v1/orders/subscriptions',
+    'v1/features/availability/subscriptions',
+    'v1/sessions/events/subscriptions'
+];
+
 Subscription.prototype.processUpdate = function(message, type) {
-    const parsedData = this.serializer.parse(message.Data, message.SchemaName);
+    if (DEBUG_URLS.indexOf(this.url) !== -1) {
+        console.log('[debug][processUpdate] Update received. SchemaName: ', this.SchemaName);
+    }
+
+    const parsedData = this.serializer.parse(message.Data, this.SchemaName);
     message.Data = parsedData;
+
+    if (this.SchemaName && (DEBUG_URLS.indexOf(this.url) !== -1)) {
+        console.log('[debug][processUpdate] data',
+            '\nurl: ', this.url,
+            '\nmessage: ', message,
+            '\ntype: ', type,
+            '\nparsedData: ', parsedData
+        );
+    }
+
     this.onUpdate(message, type);
 };
 
 Subscription.prototype.processSnapshot = function(response) {
     if (response.Schema && response.SchemaName) {
+        this.SchemaName = response.SchemaName;
+        console.log('[debug][processSnapshot] Schema. url: ', this.url, ' response: ', response);
         this.serializer.addSchema(response.Schema, response.SchemaName, this.serviceGroup, this.url);
     }
+
+    console.log('[debug][processSnapshot] url: ', this.url, ' response: ', response);
 
     // Snapshot protobuf serialization is currently 'nice to have' on openapi side. So, for now, always using JSON.
     this.onUpdate(response.Snapshot, this.UPDATE_TYPE_SNAPSHOT);

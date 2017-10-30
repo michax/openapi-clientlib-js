@@ -1,10 +1,159 @@
 import * as mockProtoPrice from './../../mocks/proto-price';
+import * as mockProtoMeta from './../../mocks/proto-meta';
 
 const SerializerProtobuf = saxo.openapi._SerializerProtobuf;
 
 describe('Serializer Protobuf', () => {
 
+    describe('metadata', () => {
+        it('should return json object with explicit null and empty', () => {
+            const serializer = new SerializerProtobuf();
+            const mock = mockProtoMeta.metaNulls();
+
+            serializer.addSchema(mock.schema, 'Main', 'trade', 'v1/prices');
+
+            const objectPayload = mock.payloadMessageNull();
+            const data = serializer.parse(serializer.stringify(objectPayload, 'Main'), 'Main');
+
+            expect(data).toEqual(jasmine.objectContaining({
+                "count": 1,
+                "description": {
+                    "id": 5,
+                    "body": null,
+                    "logs": []
+                },
+                "message": null
+            }));
+            expect(data.__meta_nulls).toBeFalsy();
+        });
+
+        it('should return json object with collection envelope', () => {
+            const serializer = new SerializerProtobuf();
+            const mock = mockProtoMeta.metaCollectionEnvelope();
+
+            serializer.addSchema(mock.schema, 'Main', 'trade', 'v1/prices');
+
+            const objectPayload = mock.payloadAll();
+            const data = serializer.parse(serializer.stringify(objectPayload, 'CollectionEnvelope'), 'Main');
+
+            expect(data).toBeTruthy();
+            expect(data).toEqual(jasmine.arrayContaining([
+                {
+                    "count": 1,
+                    "key": 1,
+                    "message": "Message one."
+                },
+                {
+                    "count": 1,
+                    "key": 2,
+                    "message": "Message two."
+                },
+                {
+                    "count": 1,
+                    "key": 3,
+                    "message": "Message three."
+                }
+            ]));
+        });
+
+        it('should return json object with collection envelope with null message', () => {
+            const serializer = new SerializerProtobuf();
+            const mock = mockProtoMeta.metaCollectionEnvelope();
+
+            serializer.addSchema(mock.schema, 'Main', 'trade', 'v1/prices');
+
+            const objectPayload = mock.payloadNullMessage();
+            const data = serializer.parse(serializer.stringify(objectPayload, 'CollectionEnvelope'), 'Main');
+
+            expect(data).toBeTruthy();
+            expect(data).toEqual(jasmine.arrayContaining([
+                {
+                    "count": 1,
+                    "key": 1,
+                    "message": "Message one."
+                },
+                {
+                    "key": 2,
+                    "message": null
+                },
+                {
+                    "count": 1,
+                    "key": 3,
+                    "message": "Message three."
+                }
+            ]));
+        });
+
+        it('should return json object with collection envelope with empty logs', () => {
+            const serializer = new SerializerProtobuf();
+            const mock = mockProtoMeta.metaCollectionEnvelope();
+
+            serializer.addSchema(mock.schema, 'Main', 'trade', 'v1/prices');
+
+            const objectPayload = mock.payloadEmptyLogs();
+            const data = serializer.parse(serializer.stringify(objectPayload, 'CollectionEnvelope'), 'Main');
+
+            expect(data).toBeTruthy();
+            expect(data).toEqual(jasmine.arrayContaining([
+                {
+                    "count": 1,
+                    "key": 1,
+                    "message": "Message one."
+                },
+                {
+                    "key": 2,
+                    "logs": []
+                },
+                {
+                    "count": 1,
+                    "key": 3,
+                    "message": "Message three."
+                }
+            ]));
+        });
+
+        it('should return json object with collection envelope with deleted row', () => {
+            const serializer = new SerializerProtobuf();
+            const mock = mockProtoMeta.metaCollectionEnvelope();
+
+            serializer.addSchema(mock.schema, 'Main', 'trade', 'v1/prices');
+
+            const objectPayload = mock.payloadDeletedRow();
+            const data = serializer.parse(serializer.stringify(objectPayload, 'CollectionEnvelope'), 'Main');
+
+            expect(data).toBeTruthy();
+            expect(data).toEqual(jasmine.arrayContaining([
+                {
+                    "count": 1,
+                    "key": 1,
+                    "message": "Message one."
+                },
+                {
+                    "key": 2,
+                    "__meta_deleted": true
+                },
+                {
+                    "count": 1,
+                    "key": 3,
+                    "message": "Message three."
+                }
+            ]));
+        });
+    });
+
     describe('addSchemas', () => {
+        it('should check option tag for root message', () => {
+            const serializer = new SerializerProtobuf();
+            serializer.addSchema(mockProtoPrice.schemaOption, 'InstrumentPriceDetails', 'trade', 'v1/prices');
+            const schemas = serializer.getSchemas();
+            const rootMessage = schemas.root.getOption('saxobank_root');
+            const schemaObject = serializer.getSchema(rootMessage);
+
+            expect(schemas).not.toBeFalsy();
+            expect(schemaObject.name).toBe('InstrumentPriceDetails');
+            expect(rootMessage).toBe('InstrumentPriceDetails');
+        });
+
         it('should add new price schema', () => {
             const serializer = new SerializerProtobuf();
             serializer.addSchema(mockProtoPrice.schema, 'PriceResponse', 'trade', 'v1/prices');
@@ -12,6 +161,7 @@ describe('Serializer Protobuf', () => {
 
             expect(schemaObject).not.toBeFalsy();
             expect(serializer.getUrlSchemaName('trade', 'v1/prices')).toBe('PriceResponse');
+
             expect(
                 JSON.parse(JSON.stringify(schemaObject.fields))
             ).toEqual(
@@ -34,6 +184,9 @@ describe('Serializer Protobuf', () => {
             serializer.addSchema(mockProtoPrice.schema, 'PriceResponse', 'trade', 'v1/prices');
             const price = serializer.parse(mockProtoPrice.encodedMessage, 'PriceResponse');
             const jsonPrice = JSON.parse(JSON.stringify(price));
+
+            console.log('[debug] jsonPrice: ', jsonPrice);
+
             expect(jsonPrice).toEqual(jasmine.objectContaining(mockProtoPrice.objectMessage));
         });
     });
@@ -72,10 +225,10 @@ describe('Serializer Protobuf', () => {
                 '\nprotobuf-base64: ', base64encoded
             );
 
-            expect(encoded.length).toBe(648);
-            expect(base64encoded.length).toBe(864);
-            expect(mockProtoPrice.getJSONBytes()).toBe(1588);
-            expect(mockProtoPrice.getJSONSchemaBytes()).toBe(1007);
+            expect(encoded.length).toBe(648, 'encoded');
+            expect(base64encoded.length).toBe(864, 'base64 encoded');
+            expect(mockProtoPrice.getJSONBytes()).toBe(1678, 'json bytes');
+            expect(mockProtoPrice.getJSONSchemaBytes()).toBe(1021, 'json schema bytes');
         });
     });
 });
